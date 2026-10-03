@@ -1,0 +1,3051 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COSMOSIS: Эволюция Вселенной</title>
+  <style>
+    :root {
+      --bg-space: #050711;
+      --card-bg: rgba(13, 20, 38, 0.75);
+      --card-border: rgba(64, 120, 240, 0.25);
+      --card-border-hover: rgba(100, 180, 255, 0.55);
+      --accent-cyan: #00f0ff;
+      --accent-gold: #ffd000;
+      --accent-purple: #b34bff;
+      --accent-red: #ff3366;
+      --accent-green: #00ffaa;
+      --text-main: #e2e8f0;
+      --text-dim: #8ba0c0;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-space);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Верхняя панель навигации по масштабам */
+    header {
+      background: rgba(8, 12, 26, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      z-index: 20;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, #00f0ff, #b34bff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+    }
+
+    .tier-tabs {
+      display: flex;
+      gap: 8px;
+      background: rgba(4, 8, 18, 0.6);
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .tier-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+
+    .tier-btn:hover:not(:disabled) {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .tier-btn.active {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(179, 75, 255, 0.2));
+      color: #fff;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+      border: 1px solid rgba(0, 240, 255, 0.4);
+    }
+
+    .tier-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      filter: grayscale(1);
+    }
+
+    .tier-badge {
+      font-size: 0.7rem;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ctrl-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 7px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ctrl-btn:hover {
+      background: rgba(0, 240, 255, 0.15);
+      border-color: var(--accent-cyan);
+    }
+
+    /* Главная рабочая область */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 320px 1fr 380px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Левая колонка: Ресурсы и Активные баффы */
+    .sidebar-left {
+      background: rgba(8, 12, 24, 0.75);
+      backdrop-filter: blur(10px);
+      border-right: 1px solid var(--card-border);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+      z-index: 10;
+    }
+
+    .panel-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent-cyan);
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .resource-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .resource-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--res-color, var(--accent-cyan));
+    }
+
+    .res-icon {
+      font-size: 1.6rem;
+      min-width: 36px;
+      text-align: center;
+    }
+
+    .res-info {
+      flex: 1;
+    }
+
+    .res-name {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .res-amount {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #fff;
+      font-family: "SF Mono", Monaco, Consolas, monospace;
+    }
+
+    .res-rate {
+      font-size: 0.75rem;
+      color: var(--accent-green);
+      font-weight: 600;
+    }
+
+    /* Баффы и ивенты */
+    .buffs-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .buff-badge {
+      background: rgba(255, 208, 0, 0.1);
+      border: 1px solid rgba(255, 208, 0, 0.3);
+      padding: 8px 12px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      animation: pulseGlow 2s infinite alternate;
+    }
+
+    .buff-text {
+      font-size: 0.8rem;
+      color: var(--accent-gold);
+      font-weight: 600;
+    }
+
+    .buff-timer {
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: #fff;
+    }
+
+    /* Центральная космическая область с Canvas */
+    .viewport-center {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #spaceCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+    }
+
+    .celestial-interact-zone {
+      position: relative;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .celestial-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      text-align: center;
+      letter-spacing: 2px;
+      text-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+      margin-bottom: 6px;
+    }
+
+    .celestial-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      background: rgba(0, 0, 0, 0.4);
+      padding: 4px 16px;
+      border-radius: 20px;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 20px;
+    }
+
+    /* Центральная интерактивная кнопка-сфера */
+    .cosmic-clicker-wrapper {
+      position: relative;
+      pointer-events: auto;
+      cursor: pointer;
+      border-radius: 50%;
+      padding: 10px;
+      transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .cosmic-clicker-wrapper:active {
+      transform: scale(0.94);
+    }
+
+    .click-target-circle {
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      position: relative;
+      box-shadow: 0 0 60px rgba(0, 240, 255, 0.3), inset 0 0 40px rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    .click-target-circle::after {
+      content: '';
+      position: absolute;
+      inset: -15px;
+      border-radius: 50%;
+      border: 1px dashed rgba(0, 240, 255, 0.4);
+      animation: rotateRings 20s linear infinite;
+    }
+
+    @keyframes rotateRings {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .click-prompt {
+      position: absolute;
+      bottom: -35px;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 600;
+      background: rgba(0,0,0,0.5);
+      padding: 3px 12px;
+      border-radius: 12px;
+      pointer-events: none;
+    }
+
+    /* Плавающие числа при клике */
+    .floating-text {
+      position: absolute;
+      pointer-events: none;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--accent-cyan);
+      text-shadow: 0 0 8px rgba(0, 240, 255, 0.8);
+      animation: floatUp 1s ease-out forwards;
+      z-index: 50;
+    }
+
+    @keyframes floatUp {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(0.8);
+      }
+      50% {
+        transform: translateY(-30px) scale(1.15);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-60px) scale(0.9);
+      }
+    }
+
+    /* Правая колонка: Вкладки строительства и технологий */
+    .sidebar-right {
+      background: rgba(8, 12, 24, 0.75);
+      backdrop-filter: blur(10px);
+      border-left: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    .right-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--card-border);
+      background: rgba(4, 8, 16, 0.8);
+    }
+
+    .right-tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      padding: 12px 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-bottom: 2px solid transparent;
+    }
+
+    .right-tab-btn:hover {
+      color: #fff;
+    }
+
+    .right-tab-btn.active {
+      color: var(--accent-cyan);
+      border-bottom-color: var(--accent-cyan);
+      background: rgba(0, 240, 255, 0.05);
+    }
+
+    .tab-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Карточки построек */
+    .building-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .building-card:hover:not(.disabled) {
+      border-color: var(--accent-cyan);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 240, 255, 0.15);
+    }
+
+    .building-card.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      filter: grayscale(0.5);
+    }
+
+    .building-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .b-name-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .b-icon {
+      font-size: 1.3rem;
+    }
+
+    .b-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #fff;
+    }
+
+    .b-count {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--accent-cyan);
+      font-family: monospace;
+      background: rgba(0, 240, 255, 0.1);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .b-desc {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      line-height: 1.3;
+    }
+
+    .b-production {
+      font-size: 0.75rem;
+      color: var(--accent-green);
+      font-weight: 600;
+    }
+
+    .b-cost {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .cost-pill {
+      font-size: 0.7rem;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 3px 8px;
+      border-radius: 6px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .cost-pill.unaffordable {
+      color: var(--accent-red);
+      background: rgba(255, 51, 102, 0.12);
+    }
+
+    /* Карточки апгрейдов */
+    .upgrade-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
+      gap: 10px;
+    }
+
+    .upgrade-card {
+      background: rgba(18, 26, 50, 0.8);
+      border: 1px solid rgba(179, 75, 255, 0.3);
+      border-radius: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .upgrade-card:hover:not(.disabled) {
+      border-color: var(--accent-purple);
+      box-shadow: 0 0 12px rgba(179, 75, 255, 0.3);
+    }
+
+    .upgrade-card.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .upgrade-card.purchased {
+      display: none;
+    }
+
+    .upgrade-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .upgrade-desc {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin: 4px 0;
+    }
+
+    /* Престиж панель */
+    .prestige-box {
+      background: linear-gradient(135deg, rgba(179, 75, 255, 0.15), rgba(0, 240, 255, 0.15));
+      border: 1px solid rgba(179, 75, 255, 0.4);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .prestige-btn {
+      background: linear-gradient(135deg, #b34bff, #ff007b);
+      border: none;
+      color: #fff;
+      font-weight: 800;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 20px rgba(179, 75, 255, 0.4);
+      transition: all 0.2s;
+    }
+
+    .prestige-btn:hover:not(:disabled) {
+      transform: scale(1.02);
+      box-shadow: 0 6px 25px rgba(255, 0, 123, 0.6);
+    }
+
+    .prestige-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Нижняя полоса событий и лога */
+    footer {
+      background: rgba(6, 9, 18, 0.9);
+      border-top: 1px solid var(--card-border);
+      padding: 6px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      z-index: 20;
+    }
+
+    .event-log-ticker {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 60%;
+    }
+
+    .ticker-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 8px var(--accent-cyan);
+    }
+
+    /* Интерактивное модальное окно События */
+    .event-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .event-modal {
+      background: #0d1426;
+      border: 1px solid var(--accent-cyan);
+      box-shadow: 0 0 40px rgba(0, 240, 255, 0.3);
+      border-radius: 16px;
+      max-width: 500px;
+      width: 100%;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: modalPop 0.3s ease-out;
+    }
+
+    @keyframes modalPop {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .event-modal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .event-icon-big {
+      font-size: 2.2rem;
+      padding: 10px;
+      background: rgba(0, 240, 255, 0.1);
+      border-radius: 12px;
+      border: 1px solid var(--accent-cyan);
+    }
+
+    .event-header-text h3 {
+      font-size: 1.2rem;
+      color: #fff;
+    }
+
+    .event-header-text p {
+      font-size: 0.8rem;
+      color: var(--accent-gold);
+    }
+
+    .event-body {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: var(--text-main);
+    }
+
+    .event-choices {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .event-choice-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 8px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .event-choice-btn:hover {
+      background: rgba(0, 240, 255, 0.15);
+      border-color: var(--accent-cyan);
+    }
+
+    .choice-outcome {
+      font-size: 0.75rem;
+      color: var(--accent-green);
+    }
+
+    /* Модальное окно Настроек и Статистики */
+    .generic-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-box {
+      background: #0e162c;
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      width: 480px;
+      max-width: 90vw;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-box h2 {
+      font-size: 1.2rem;
+      color: #fff;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 8px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 10px;
+    }
+
+    /* Ачивки тост */
+    .achievement-toast {
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      background: rgba(14, 24, 46, 0.95);
+      border: 1px solid var(--accent-gold);
+      box-shadow: 0 0 20px rgba(255, 208, 0, 0.4);
+      border-radius: 12px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 2000;
+      transform: translateX(120%);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .achievement-toast.show {
+      transform: translateX(0);
+    }
+
+    /* Скроллбары */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 240, 255, 0.4);
+    }
+
+    /* Адаптивность для средних экранов */
+    @media (max-width: 1024px) {
+      main {
+        grid-template-columns: 260px 1fr 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Верхняя полоса навигации -->
+  <header>
+    <div class="logo-container">
+      <span style="font-size: 1.5rem;">🌌</span>
+      <div class="logo-title">COSMOSIS</div>
+    </div>
+
+    <!-- Вкладки масштабов эволюции -->
+    <div class="tier-tabs">
+      <button class="tier-btn active" id="tabTier1" onclick="switchTier('planet')">
+        <span>🪐 Планета</span>
+      </button>
+      <button class="tier-btn" id="tabTier2" onclick="switchTier('system')" disabled title="Требуется Межпланетный Ковчег">
+        <span>☀️ Система</span>
+        <span class="tier-badge" id="badgeTier2">🔒</span>
+      </button>
+      <button class="tier-btn" id="tabTier3" onclick="switchTier('galaxy')" disabled title="Требуется Сверхсветовой Варп-двигатель">
+        <span>🌀 Галактика</span>
+        <span class="tier-badge" id="badgeTier3">🔒</span>
+      </button>
+      <button class="tier-btn" id="tabTier4" onclick="switchTier('universe')" disabled title="Требуется Квантовый Коллапс">
+        <span>✨ Вселенная</span>
+        <span class="tier-badge" id="badgeTier4">🔒</span>
+      </button>
+    </div>
+
+    <div class="header-controls">
+      <button class="ctrl-btn" style="border-color: var(--accent-gold); color: var(--accent-gold); background: rgba(255, 208, 0, 0.1);" onclick="openCheatModal()" title="Песочница / Режим Творца">
+        <span>⚡ Песочница</span>
+      </button>
+      <button class="ctrl-btn" id="soundToggleBtn" onclick="toggleAudio()" title="Звук">
+        <span id="soundIcon">🔊</span>
+      </button>
+      <button class="ctrl-btn" onclick="openStatsModal()" title="Статистика и достижения">
+        <span>🏆 Статистика</span>
+      </button>
+      <button class="ctrl-btn" onclick="openSettingsModal()" title="Настройки">
+        <span>⚙️ Настройки</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Главное рабочее поле -->
+  <main>
+    <!-- Левая панель: Ресурсы текущего масштаба и активные баффы -->
+    <aside class="sidebar-left">
+      <div class="panel-title">
+        <span>Сырье и Энергия</span>
+        <span style="font-size: 0.75rem; color: var(--text-dim);" id="currentScaleLabel">Планетарный уровень</span>
+      </div>
+
+      <!-- Динамический список ресурсов -->
+      <div id="resourceListContainer" style="display: flex; flex-direction: column; gap: 10px;">
+        <!-- Заполняется JS -->
+      </div>
+
+      <div class="panel-title" style="margin-top: 14px;">
+        <span>Космические Влияния</span>
+      </div>
+      <div class="buffs-container" id="buffsContainer">
+        <div style="font-size: 0.75rem; color: var(--text-dim); text-align: center; padding: 10px;">
+          Нет активных гравитационных аномалий
+        </div>
+      </div>
+    </aside>
+
+    <!-- Центр: Космическая сцена и объект для кликов -->
+    <section class="viewport-center">
+      <canvas id="spaceCanvas"></canvas>
+
+      <div class="celestial-interact-zone">
+        <div class="celestial-title" id="celestialName">Планета Земля-Прайм</div>
+        <div class="celestial-subtitle" id="celestialSubtitle">Этап: Зарождение индустрии</div>
+
+        <div class="cosmic-clicker-wrapper" id="cosmicClicker" onclick="handleCelestialClick(event)">
+          <div class="click-target-circle" id="clickTargetCircle">
+            <span id="celestialEmoji" style="font-size: 5rem; filter: drop-shadow(0 0 25px rgba(0, 240, 255, 0.8));">🌍</span>
+          </div>
+          <div class="click-prompt" id="clickPromptText">Кликните для бурения (+1 Минерал)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Правая панель: Постройки, Технологии, Мета-прогресс -->
+    <aside class="sidebar-right">
+      <div class="right-tabs">
+        <button class="right-tab-btn active" id="tabBtnBuildings" onclick="switchRightTab('buildings')">Постройки</button>
+        <button class="right-tab-btn" id="tabBtnUpgrades" onclick="switchRightTab('upgrades')">Технологии (<span id="availUpgradesCount">0</span>)</button>
+        <button class="right-tab-btn" id="tabBtnPrestige" onclick="switchRightTab('prestige')">Космогенезис</button>
+      </div>
+
+      <!-- Вкладка построек -->
+      <div class="tab-content" id="tabContentBuildings">
+        <!-- Заполняется динамически -->
+      </div>
+
+      <!-- Вкладка апгрейдов -->
+      <div class="tab-content" id="tabContentUpgrades" style="display: none;">
+        <div class="upgrade-grid" id="upgradeGrid">
+          <!-- Заполняется динамически -->
+        </div>
+      </div>
+
+      <!-- Вкладка Космогенезиса (Престиж / Большой Взрыв) -->
+      <div class="tab-content" id="tabContentPrestige" style="display: none;">
+        <div class="prestige-box">
+          <div style="font-size: 2.2rem;">💥</div>
+          <h3 style="color: #fff; font-size: 1.1rem;">Сжатие и Большой Взрыв</h3>
+          <p style="font-size: 0.8rem; color: var(--text-dim); line-height: 1.4;">
+            Коллапсируйте текущее состояние Вселенной в сингулярность, чтобы возродиться с 
+            <strong style="color: var(--accent-gold);" id="pendingSparksText">0 Искр Творения</strong>.
+            Искры открывают Великие Физические Константы, навсегда умножающие производительность всех миров.
+          </p>
+          <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; font-size: 0.85rem;">
+            Всего Искр в наличии: <strong style="color: var(--accent-cyan);" id="genesisSparksCount">0</strong>
+          </div>
+          <button class="prestige-btn" id="bigBangBtn" onclick="triggerBigBang()" disabled>
+            Спровоцировать Большой Взрыв
+          </button>
+        </div>
+
+        <div class="panel-title" style="margin-top: 12px;">
+          <span>Великие Константы Бытия</span>
+        </div>
+        <div id="constantsList" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Постоянные Вселенной -->
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Нижний футер: Лог и инфо -->
+  <footer>
+    <div class="event-log-ticker">
+      <div class="ticker-dot"></div>
+      <span id="statusTicker">Инициализация квантового сенсора... Готовность к освоению космоса.</span>
+    </div>
+    <div style="display: flex; gap: 16px;">
+      <span>Космическое время: <strong id="gameTimeCounter" style="color: #fff;">00:00:00</strong></span>
+      <span>Всего кликов: <strong id="totalClicksCount" style="color: #fff;">0</strong></span>
+    </div>
+  </footer>
+
+  <!-- Интерактивное модальное окно Событий -->
+  <div class="event-modal-backdrop" id="eventModal">
+    <div class="event-modal">
+      <div class="event-modal-header">
+        <div class="event-icon-big" id="eventIcon">⚡</div>
+        <div class="event-header-text">
+          <h3 id="eventTitle">Солнечная Вспышка</h3>
+          <p id="eventCategory">Экстренное Космическое Событие</p>
+        </div>
+      </div>
+      <div class="event-body" id="eventDescription">
+        Звезда системы выбросила колоссальный протуберанец высокоэнергетической плазмы. Энергосети перегружены. Как отреагировать?
+      </div>
+      <div class="event-choices" id="eventChoices">
+        <!-- Кнопки выборов -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно Песочницы (Режим Творца) -->
+  <div class="generic-modal" id="cheatModal">
+    <div class="modal-box" style="border-color: var(--accent-gold); box-shadow: 0 0 30px rgba(255, 208, 0, 0.25);">
+      <h2 style="color: var(--accent-gold); display: flex; align-items: center; gap: 8px;">
+        <span>⚡</span>
+        <span>Песочница / Режим Творца</span>
+      </h2>
+      <p style="font-size: 0.85rem; color: var(--text-dim);">
+        Быстрый доступ ко всем ресурсам, мегаструктурам и масштабам для полного осмотра игры.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">
+        <button class="ctrl-btn" style="background: rgba(0, 240, 255, 0.12); border-color: var(--accent-cyan); color: #fff; font-weight: 700; padding: 10px;" onclick="cheatGiveResources(10000000)">
+          🪐 +10,000,000 всех базовых ресурсов
+        </button>
+        <button class="ctrl-btn" style="background: rgba(179, 75, 255, 0.15); border-color: var(--accent-purple); color: #fff; font-weight: 700; padding: 10px;" onclick="cheatGiveSparks(2500)">
+          💥 +2,500 Искр Творения (Престиж / Константы)
+        </button>
+        <button class="ctrl-btn" style="background: rgba(0, 255, 170, 0.12); border-color: var(--accent-green); color: #fff; font-weight: 700; padding: 10px;" onclick="cheatUnlockAllTiers()">
+          🔓 Открыть ВСЕ масштабы (Система, Галактика, Вселенная)
+        </button>
+        <button class="ctrl-btn" style="background: linear-gradient(135deg, rgba(255, 208, 0, 0.25), rgba(255, 0, 123, 0.25)); border-color: var(--accent-gold); color: #fff; font-weight: 800; padding: 12px;" onclick="cheatGodMode()">
+          👑 GOD MODE (1 Млрд ресурсов + Все технологии + Все масштабы)
+        </button>
+      </div>
+
+      <div class="btn-row">
+        <button class="ctrl-btn" onclick="closeCheatModal()">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно Настроек -->
+  <div class="generic-modal" id="settingsModal">
+    <div class="modal-box">
+      <h2>Настройки Космосимулятора</h2>
+      <p style="font-size: 0.85rem; color: var(--text-dim);">Управление данными сессии и производительностью.</p>
+      
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+        <button class="ctrl-btn" onclick="exportSaveData()">💾 Экспорт сохранения (в буфер)</button>
+        <button class="ctrl-btn" onclick="importSaveData()">📥 Импорт сохранения из строки</button>
+        <button class="ctrl-btn" style="border-color: var(--accent-red); color: var(--accent-red);" onclick="hardResetGame()">⚠️ Полный сброс прогресса</button>
+      </div>
+
+      <div class="btn-row">
+        <button class="ctrl-btn" onclick="closeSettingsModal()">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно Статистики и Достижений -->
+  <div class="generic-modal" id="statsModal">
+    <div class="modal-box" style="width: 580px; max-height: 80vh; overflow-y: auto;">
+      <h2>Хроники Вселенной</h2>
+      <div id="statsSummary" style="font-size: 0.85rem; line-height: 1.6; color: var(--text-main);">
+        <!-- Данные статистики -->
+      </div>
+      <h3 style="margin-top: 14px; font-size: 1rem; color: var(--accent-gold);">Достижения (<span id="unlockedAchCount">0</span>/<span id="totalAchCount">0</span>)</h3>
+      <div id="achievementsList" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+        <!-- Достижения -->
+      </div>
+      <div class="btn-row">
+        <button class="ctrl-btn" onclick="closeStatsModal()">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Тост получения ачивки -->
+  <div class="achievement-toast" id="achievementToast">
+    <span style="font-size: 1.8rem;" id="achToastIcon">🏆</span>
+    <div>
+      <div style="font-size: 0.7rem; color: var(--accent-gold); text-transform: uppercase; font-weight: 700;">Новое Достижение!</div>
+      <div style="font-size: 0.95rem; font-weight: 800; color: #fff;" id="achToastTitle">Первый шаг человечества</div>
+    </div>
+  </div>
+
+  <!-- Звуковой синтезатор и логика игры -->
+  <script>
+    /* =========================================================================
+       1. ЗВУКОВОЙ ДВИЖОК (Web Audio API Procedural Synth)
+       ========================================================================= */
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function toggleAudio() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('soundIcon').textContent = soundEnabled ? '🔊' : '🔇';
+      document.getElementById('soundToggleBtn').style.opacity = soundEnabled ? '1' : '0.6';
+    }
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'click') {
+          // Мягкий космический клик
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.exponentialRampToValueAtTime(140, now + 0.08);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === 'buy') {
+          // Гармоничный восходящий Sci-Fi перезвон
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+          osc.start(now);
+          osc.stop(now + 0.18);
+        } else if (type === 'event') {
+          // Сигнал космического радара
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(587, now);
+          osc.frequency.setValueAtTime(880, now + 0.1);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+          osc.start(now);
+          osc.stop(now + 0.35);
+        } else if (type === 'comet') {
+          // Кристальный взрыв кометы
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(987, now);
+          osc.frequency.exponentialRampToValueAtTime(1318, now + 0.1);
+          osc.frequency.exponentialRampToValueAtTime(440, now + 0.25);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else if (type === 'warp') {
+          // Басовый варп-прыжок
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(120, now);
+          osc.frequency.exponentialRampToValueAtTime(40, now + 0.6);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+          osc.start(now);
+          osc.stop(now + 0.65);
+        }
+      } catch (e) {
+        console.error("Audio error:", e);
+      }
+    }
+
+    /* =========================================================================
+       2. ИГРОВЫЕ ДАННЫЕ И СОСТОЯНИЕ (STATE & CONFIG)
+       ========================================================================= */
+    const GAME_CONFIG = {
+      tiers: {
+        planet: {
+          id: 'planet',
+          name: 'Планета',
+          fullName: 'Терра-Прайм',
+          subtitle: 'Фаза: Геологическое освоение и терраформирование',
+          emoji: '🪐',
+          color: '#00f0ff',
+          clickResource: 'minerals',
+          baseClickGain: 1,
+          nextTierCost: { minerals: 50000, energy: 25000, biomass: 10000 },
+          nextTierDesc: 'Межпланетный Ковчег (Выход в Солнечную систему)'
+        },
+        system: {
+          id: 'system',
+          name: 'Солнечная система',
+          fullName: 'Система Гелиос-Альфа',
+          subtitle: 'Фаза: Звездная инженерия и Рой Дайсона',
+          emoji: '☀️',
+          color: '#ffaa00',
+          clickResource: 'plasma',
+          baseClickGain: 1,
+          nextTierCost: { plasma: 200000, helium: 100000, antimatter: 5000 },
+          nextTierDesc: 'Сверхсветовой Варп-двигатель (Выход в Галактику)'
+        },
+        galaxy: {
+          id: 'galaxy',
+          name: 'Галактика',
+          fullName: 'Спираль Андромеды-V',
+          subtitle: 'Фаза: Квантовое искривление и темная материя',
+          emoji: '🌀',
+          color: '#b34bff',
+          clickResource: 'darkMatter',
+          baseClickGain: 1,
+          nextTierCost: { darkMatter: 500000, gravitons: 100000, neuralMesh: 20000 },
+          nextTierDesc: 'Квантовый Коллапс (Сжатие в масштабы Вселенной)'
+        },
+        universe: {
+          id: 'universe',
+          name: 'Вселенная',
+          fullName: 'Мультивселенная Творения',
+          subtitle: 'Фаза: Управление фундаментальными законами бытия',
+          emoji: '✨',
+          color: '#00ffaa',
+          clickResource: 'entropy',
+          baseClickGain: 1,
+          nextTierCost: null,
+          nextTierDesc: null
+        }
+      },
+
+      resources: {
+        // Уровень 1
+        minerals: { name: 'Минералы', icon: '🪨', color: '#00f0ff', tier: 'planet' },
+        energy: { name: 'Энергия', icon: '⚡', color: '#ffd000', tier: 'planet' },
+        biomass: { name: 'Биомасса', icon: '🧬', color: '#00ffaa', tier: 'planet' },
+        // Уровень 2
+        plasma: { name: 'Звездная Плазма', icon: '🔥', color: '#ff7700', tier: 'system' },
+        helium: { name: 'Гелий-3', icon: '🧪', color: '#00d4ff', tier: 'system' },
+        antimatter: { name: 'Антиматерия', icon: '⚛️', color: '#ff00bb', tier: 'system' },
+        // Уровень 3
+        darkMatter: { name: 'Темная Материя', icon: '🌌', color: '#9d4edd', tier: 'galaxy' },
+        gravitons: { name: 'Гравитоны', icon: '🌀', color: '#48cae4', tier: 'galaxy' },
+        neuralMesh: { name: 'Нейросеть Космоса', icon: '🧠', color: '#06d6a0', tier: 'galaxy' },
+        // Уровень 4 / Престиж
+        entropy: { name: 'Энтропия', icon: '⏳', color: '#f72585', tier: 'universe' },
+        genesisSparks: { name: 'Искры Творения', icon: '💥', color: '#ffd000', tier: 'universe', isPrestige: true }
+      },
+
+      buildings: [
+        // --- ПЛАНЕТА ---
+        {
+          id: 'auto_drill',
+          tier: 'planet',
+          name: 'Автоматический бур',
+          icon: '⛏️',
+          desc: 'Бурит тектонические плиты в поисках тяжелых минералов.',
+          baseCost: { minerals: 15 },
+          costMult: 1.15,
+          production: { minerals: 1 }
+        },
+        {
+          id: 'solar_panel',
+          tier: 'planet',
+          name: 'Солнечные батареи',
+          icon: '🔆',
+          desc: 'Улавливают свет звезды и вырабатывают базовое электричество.',
+          baseCost: { minerals: 35 },
+          costMult: 1.15,
+          production: { energy: 1 }
+        },
+        {
+          id: 'geothermal_plant',
+          tier: 'planet',
+          name: 'Геотермальная ТЭЦ',
+          icon: '🌋',
+          desc: 'Преобразует жар мантии планеты в мощный поток тока.',
+          baseCost: { minerals: 120 },
+          costMult: 1.16,
+          production: { energy: 4, minerals: 0.5 }
+        },
+        {
+          id: 'bio_dome',
+          tier: 'planet',
+          name: 'Биосферный купол',
+          icon: '🌱',
+          desc: 'Синтезирует растительные культуры и обогащает атмосферу.',
+          baseCost: { minerals: 500, energy: 200 },
+          costMult: 1.18,
+          production: { biomass: 2, energy: -0.5 }
+        },
+        {
+          id: 'space_elevator',
+          tier: 'planet',
+          name: 'Космический лифт',
+          icon: '🛰️',
+          desc: 'Сверхпрочные нанотрубки доставляют тонны груза на орбиту.',
+          baseCost: { minerals: 2500, energy: 1000, biomass: 500 },
+          costMult: 1.20,
+          production: { minerals: 25, energy: 15 }
+        },
+        {
+          id: 'orbital_colony',
+          tier: 'planet',
+          name: 'Орбитальная колония',
+          icon: '🏙️',
+          desc: 'Автономный мегаполис на геостационарной орбите.',
+          baseCost: { minerals: 12000, energy: 5000, biomass: 2500 },
+          costMult: 1.22,
+          production: { minerals: 100, energy: 75, biomass: 40 }
+        },
+
+        // --- СОЛНЕЧНАЯ СИСТЕМА ---
+        {
+          id: 'solar_collector',
+          tier: 'system',
+          name: 'Солнечный уловитель',
+          icon: '☀️',
+          desc: 'Улавливает корональные выбросы близ звезды.',
+          baseCost: { plasma: 50 },
+          costMult: 1.15,
+          production: { plasma: 2, energy: 50 }
+        },
+        {
+          id: 'gas_siphoner',
+          tier: 'system',
+          name: 'Сифон Юпитера',
+          icon: '🌪️',
+          desc: 'Откачивает Гелий-3 из верхних слоев газового гиганта.',
+          baseCost: { plasma: 350, energy: 500 },
+          costMult: 1.17,
+          production: { helium: 4, plasma: 1 }
+        },
+        {
+          id: 'collider_station',
+          tier: 'system',
+          name: 'Орбитальный коллайдер',
+          icon: '⚡',
+          desc: 'Сталкивает релятивистские ядра для синтеза позитронов.',
+          baseCost: { plasma: 2000, helium: 500 },
+          costMult: 1.19,
+          production: { antimatter: 1, energy: -100 }
+        },
+        {
+          id: 'dyson_swarm',
+          tier: 'system',
+          name: 'Рой Дайсона',
+          icon: '🌐',
+          desc: 'Миллионы зеркал вокруг светила аккумулируют чистую энергию.',
+          baseCost: { plasma: 15000, helium: 4000, antimatter: 300 },
+          costMult: 1.22,
+          production: { plasma: 80, energy: 2000 }
+        },
+        {
+          id: 'dyson_sphere_core',
+          tier: 'system',
+          name: 'Каркас Сферы Дайсона',
+          icon: '🔆',
+          desc: 'Полное удержание мощности звезды цивилизацией II типа.',
+          baseCost: { plasma: 80000, helium: 25000, antimatter: 2500 },
+          costMult: 1.25,
+          production: { plasma: 450, antimatter: 25, helium: 150 }
+        },
+
+        // --- ГАЛАКТИКА ---
+        {
+          id: 'quasar_extractor',
+          tier: 'galaxy',
+          name: 'Экстрактор квазара',
+          icon: '✨',
+          desc: 'Собирает релятивистские струи активного галактического ядра.',
+          baseCost: { darkMatter: 100 },
+          costMult: 1.16,
+          production: { darkMatter: 3, energy: 5000 }
+        },
+        {
+          id: 'wormhole_gate',
+          tier: 'galaxy',
+          name: 'Врата червоточин',
+          icon: '🌀',
+          desc: 'Искривляет пространство-время, генерируя гравитационные волны.',
+          baseCost: { darkMatter: 800 },
+          costMult: 1.18,
+          production: { gravitons: 5, darkMatter: 2 }
+        },
+        {
+          id: 'hive_supercluster',
+          tier: 'galaxy',
+          name: 'Нейрокластер звезд',
+          icon: '🧠',
+          desc: 'Опто-квантовая сеть, охватывающая тысячи звездных систем.',
+          baseCost: { darkMatter: 5000, gravitons: 400 },
+          costMult: 1.21,
+          production: { neuralMesh: 3, gravitons: 10 }
+        },
+        {
+          id: 'blackhole_ring',
+          tier: 'galaxy',
+          name: 'Сингулярное кольцо',
+          icon: '🕳️',
+          desc: 'Сфера Пенроуза вокруг сверхмассивной черной дыры.',
+          baseCost: { darkMatter: 35000, gravitons: 3000, neuralMesh: 1000 },
+          costMult: 1.24,
+          production: { darkMatter: 250, gravitons: 90, neuralMesh: 35 }
+        },
+
+        // --- ВСЕЛЕННАЯ ---
+        {
+          id: 'vacuum_tapper',
+          tier: 'universe',
+          name: 'Генератор квантовой пены',
+          icon: '🪐',
+          desc: 'Извлекает нулевые флуктуации из самой ткани вакуума.',
+          baseCost: { entropy: 10 },
+          costMult: 1.20,
+          production: { entropy: 2 }
+        },
+        {
+          id: 'cosmic_string_weaver',
+          tier: 'universe',
+          name: 'Ткач Космических Струн',
+          icon: '🕸️',
+          desc: 'Натягивает одномерные топологические дефекты пространства.',
+          baseCost: { entropy: 100 },
+          costMult: 1.25,
+          production: { entropy: 15 }
+        }
+      ],
+
+      upgrades: [
+        {
+          id: 'upg_click_1',
+          name: 'Алмазные буровые коронки',
+          desc: 'Сила клика по планете удваивается (+100%).',
+          cost: { minerals: 50 },
+          tier: 'planet',
+          effect: { clickMultiplier: 2 }
+        },
+        {
+          id: 'upg_drill_boost',
+          name: 'Магнитная левитация буров',
+          desc: 'Автоматические буры работают на 100% эффективнее.',
+          cost: { minerals: 200, energy: 50 },
+          tier: 'planet',
+          effect: { buildingBoost: { buildingId: 'auto_drill', mult: 2 } }
+        },
+        {
+          id: 'upg_click_2',
+          name: 'Плазменный термобур',
+          desc: 'Утраивает силу клика по планете (+200%).',
+          cost: { minerals: 1000, energy: 500 },
+          tier: 'planet',
+          effect: { clickMultiplier: 3 }
+        },
+        {
+          id: 'upg_geo_overclock',
+          name: 'Магматический теплообмен',
+          desc: 'Геотермальные ТЭЦ вырабатывают в 2.5 раза больше энергии.',
+          cost: { minerals: 3000, energy: 1500 },
+          tier: 'planet',
+          effect: { buildingBoost: { buildingId: 'geothermal_plant', mult: 2.5 } }
+        },
+        {
+          id: 'upg_bio_genetics',
+          name: 'Ускоренный фотосинтез',
+          desc: 'Биосферные купола производят в 3 раза больше биомассы.',
+          cost: { minerals: 8000, biomass: 2000 },
+          tier: 'planet',
+          effect: { buildingBoost: { buildingId: 'bio_dome', mult: 3 } }
+        },
+        // Уровень 2
+        {
+          id: 'upg_solar_sails',
+          name: 'Фотонные паруса',
+          desc: 'Удваивает добычу плазмы кликом и от построек.',
+          cost: { plasma: 500, helium: 100 },
+          tier: 'system',
+          effect: { clickMultiplier: 2, buildingBoost: { buildingId: 'solar_collector', mult: 2 } }
+        },
+        {
+          id: 'upg_helium_fusion',
+          name: 'Термоядерный синтез D-He3',
+          desc: 'Сифоны Юпитера работают на 150% быстрее.',
+          cost: { plasma: 2500, helium: 1000 },
+          tier: 'system',
+          effect: { buildingBoost: { buildingId: 'gas_siphoner', mult: 2.5 } }
+        },
+        {
+          id: 'upg_magnetic_traps',
+          name: 'Квантовые ловушки Пеннинга',
+          desc: 'Производство антиматерии коллайдерами удваивается.',
+          cost: { plasma: 12000, antimatter: 200 },
+          tier: 'system',
+          effect: { buildingBoost: { buildingId: 'collider_station', mult: 2 } }
+        },
+        // Уровень 3
+        {
+          id: 'upg_dark_lens',
+          name: 'Гравитационное линзирование',
+          desc: 'Удваивает сбор темной материи и гравитонов.',
+          cost: { darkMatter: 2000, gravitons: 300 },
+          tier: 'galaxy',
+          effect: { clickMultiplier: 2, buildingBoost: { buildingId: 'quasar_extractor', mult: 2 } }
+        },
+        {
+          id: 'upg_tachyon_network',
+          name: 'Тахионная синхронизация',
+          desc: 'Нейрокластеры и Врата червоточин вырабатывают в 2.5 раза больше.',
+          cost: { darkMatter: 15000, neuralMesh: 1000 },
+          tier: 'galaxy',
+          effect: { buildingBoost: { buildingId: 'hive_supercluster', mult: 2.5 } }
+        }
+      ],
+
+      // Великие Константы (Престиж апгрейды за Искры Творения)
+      constants: [
+        {
+          id: 'const_planck',
+          name: 'Квантование Планка',
+          desc: '+100% к силе любого клика на всех уровнях за ранг.',
+          baseCost: 1,
+          costMult: 2,
+          level: 0,
+          effectPerLevel: 1.0
+        },
+        {
+          id: 'const_gravity',
+          name: 'Гравитационная гармония',
+          desc: '+25% к общей пассивной добыче всех ресурсов во Вселенной за ранг.',
+          baseCost: 2,
+          costMult: 2.5,
+          level: 0,
+          effectPerLevel: 0.25
+        },
+        {
+          id: 'const_light',
+          name: 'Релятивистский форсаж',
+          desc: 'Метеориты и события появляются на 20% чаще за ранг.',
+          baseCost: 3,
+          costMult: 3,
+          level: 0,
+          effectPerLevel: 0.2
+        },
+        {
+          id: 'const_dark_energy',
+          name: 'Темная экспансия',
+          desc: 'Снижает базовую стоимость всех построек на 5% (до 40% максимум).',
+          baseCost: 5,
+          costMult: 3.5,
+          level: 0,
+          effectPerLevel: 0.05
+        }
+      ],
+
+      achievements: [
+        { id: 'ach_1', title: 'Первый бур', desc: 'Добудьте первые 100 минералов.', icon: '⛏️', unlocked: false, check: (s) => s.totalProduced.minerals >= 100 },
+        { id: 'ach_2', title: 'Индустриальная эра', desc: 'Постройте 10 построек на планете.', icon: '🏭', unlocked: false, check: (s) => s.totalBuildingsBought >= 10 },
+        { id: 'ach_3', title: 'Колыбель пройдена', desc: 'Откройте Солнечную систему.', icon: '🚀', unlocked: false, check: (s) => s.unlockedTiers.system },
+        { id: 'ach_4', title: 'Повелитель Солнца', desc: 'Добудьте 10,000 Звездной Плазмы.', icon: '☀️', unlocked: false, check: (s) => s.totalProduced.plasma >= 10000 },
+        { id: 'ach_5', title: 'Варп-цивилизация', desc: 'Откройте Галактику.', icon: '🌀', unlocked: false, check: (s) => s.unlockedTiers.galaxy },
+        { id: 'ach_6', title: 'Космический кликер', desc: 'Совершите 1,000 кликов.', icon: '👆', unlocked: false, check: (s) => s.totalClicks >= 1000 },
+        { id: 'ach_7', title: 'Охотник за кометами', desc: 'Поймайте 5 летящих комет.', icon: '☄️', unlocked: false, check: (s) => s.cometsClicked >= 5 },
+        { id: 'ach_8', title: 'Творец Вселенной', desc: 'Совершите первый Большой Взрыв.', icon: '💥', unlocked: false, check: (s) => s.prestigeCount >= 1 }
+      ]
+    };
+
+    // Состояние игры (Save state)
+    let state = {
+      currentTier: 'planet',
+      unlockedTiers: {
+        planet: true,
+        system: false,
+        galaxy: false,
+        universe: false
+      },
+      resources: {
+        minerals: 0,
+        energy: 0,
+        biomass: 0,
+        plasma: 0,
+        helium: 0,
+        antimatter: 0,
+        darkMatter: 0,
+        gravitons: 0,
+        neuralMesh: 0,
+        entropy: 0,
+        genesisSparks: 0
+      },
+      rates: {},
+      buildings: {},
+      upgradesPurchased: [],
+      constants: {},
+      totalClicks: 0,
+      cometsClicked: 0,
+      prestigeCount: 0,
+      totalBuildingsBought: 0,
+      playTimeSeconds: 0,
+      totalProduced: {},
+      lastSaveTime: Date.now(),
+      buffs: [] // { id, name, mult, endsAt }
+    };
+
+    // Инициализация дефолтов
+    Object.keys(GAME_CONFIG.resources).forEach(r => {
+      state.totalProduced[r] = 0;
+      state.rates[r] = 0;
+    });
+    GAME_CONFIG.buildings.forEach(b => {
+      state.buildings[b.id] = 0;
+    });
+    GAME_CONFIG.constants.forEach(c => {
+      state.constants[c.id] = 0;
+    });
+
+    /* =========================================================================
+       3. ФОРМАТИРОВАНИЕ ЧИСЕЛ И ВРЕМЕНИ
+       ========================================================================= */
+    const NUM_SUFFIXES = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc', 'Ud', 'Dd'];
+
+    function formatNumber(num) {
+      if (num === null || num === undefined || isNaN(num)) return '0';
+      if (num < 1000) {
+        if (Number.isInteger(num)) return num.toString();
+        return num.toFixed(1);
+      }
+      const exp = Math.floor(Math.log10(num) / 3);
+      if (exp < NUM_SUFFIXES.length) {
+        const val = num / Math.pow(10, exp * 3);
+        return val.toFixed(2) + ' ' + NUM_SUFFIXES[exp];
+      }
+      return num.toExponential(2);
+    }
+
+    function formatTime(totalSec) {
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = Math.floor(totalSec % 60);
+      return [h, m, s].map(v => v < 10 ? '0' + v : v).join(':');
+    }
+
+    /* =========================================================================
+       4. РАСЧЕТ ПРОИЗВОДИТЕЛЬНОСТИ И ЛОГИКА ТАКТОВ
+       ========================================================================= */
+    function getBuildingCost(building) {
+      const owned = state.buildings[building.id] || 0;
+      const discount = Math.min(0.4, (state.constants['const_dark_energy'] || 0) * 0.05);
+      const costFactor = Math.pow(building.costMult, owned) * (1 - discount);
+      const cost = {};
+      for (const [res, amount] of Object.entries(building.baseCost)) {
+        cost[res] = Math.ceil(amount * costFactor);
+      }
+      return cost;
+    }
+
+    function canAfford(costObj) {
+      for (const [res, amount] of Object.entries(costObj)) {
+        if ((state.resources[res] || 0) < amount) return false;
+      }
+      return true;
+    }
+
+    function deductCost(costObj) {
+      for (const [res, amount] of Object.entries(costObj)) {
+        state.resources[res] -= amount;
+      }
+    }
+
+    function calculateProductionRates() {
+      // Сброс базовых рейтов
+      for (const r of Object.keys(GAME_CONFIG.resources)) {
+        state.rates[r] = 0;
+      }
+
+      // Глобальный бонус от константы Гравитации
+      const gravityLevel = state.constants['const_gravity'] || 0;
+      const globalMultiplier = 1 + (gravityLevel * 0.25);
+
+      // Проверка активных временных баффов
+      let eventEnergyMult = 1;
+      let eventUniversalMult = 1;
+      const now = Date.now();
+      state.buffs = state.buffs.filter(b => b.endsAt > now);
+      state.buffs.forEach(b => {
+        if (b.type === 'energy') eventEnergyMult *= b.mult;
+        if (b.type === 'all') eventUniversalMult *= b.mult;
+      });
+
+      // Подсчет от зданий
+      GAME_CONFIG.buildings.forEach(b => {
+        const count = state.buildings[b.id] || 0;
+        if (count <= 0) return;
+
+        // Расчет множителя здания из исследованных технологий
+        let bMult = 1;
+        state.upgradesPurchased.forEach(upgId => {
+          const upg = GAME_CONFIG.upgrades.find(u => u.id === upgId);
+          if (upg && upg.effect && upg.effect.buildingBoost && upg.effect.buildingBoost.buildingId === b.id) {
+            bMult *= upg.effect.buildingBoost.mult;
+          }
+        });
+
+        for (const [res, prod] of Object.entries(b.production)) {
+          let effProd = prod * count * bMult * globalMultiplier * eventUniversalMult;
+          if (res === 'energy' && prod > 0) effProd *= eventEnergyMult;
+          state.rates[res] = (state.rates[res] || 0) + effProd;
+        }
+      });
+    }
+
+    function gameTick(deltaSeconds) {
+      calculateProductionRates();
+
+      // Начисление ресурсов
+      for (const [res, rate] of Object.entries(state.rates)) {
+        if (rate !== 0) {
+          const gain = rate * deltaSeconds;
+          state.resources[res] = Math.max(0, (state.resources[res] || 0) + gain);
+          if (gain > 0) {
+            state.totalProduced[res] = (state.totalProduced[res] || 0) + gain;
+          }
+        }
+      }
+
+      state.playTimeSeconds += deltaSeconds;
+
+      // Проверка ачивок
+      checkAchievements();
+    }
+
+    /* =========================================================================
+       5. КЛИК ПО ЦЕНТРАЛЬНОМУ ТЕЛУ
+       ========================================================================= */
+    function getClickPower() {
+      const curConfig = GAME_CONFIG.tiers[state.currentTier];
+      let power = curConfig.baseClickGain;
+
+      // Множитель от технологий
+      state.upgradesPurchased.forEach(upgId => {
+        const upg = GAME_CONFIG.upgrades.find(u => u.id === upgId);
+        if (upg && upg.tier === state.currentTier && upg.effect && upg.effect.clickMultiplier) {
+          power *= upg.effect.clickMultiplier;
+        }
+      });
+
+      // Множитель от Постоянной Планка
+      const planckLevel = state.constants['const_planck'] || 0;
+      power *= (1 + planckLevel * 1.0);
+
+      // Временные баффы
+      state.buffs.forEach(b => {
+        if (b.type === 'click') power *= b.mult;
+      });
+
+      return Math.max(1, Math.floor(power));
+    }
+
+    function handleCelestialClick(e) {
+      const curConfig = GAME_CONFIG.tiers[state.currentTier];
+      const resKey = curConfig.clickResource;
+      const power = getClickPower();
+
+      state.resources[resKey] = (state.resources[resKey] || 0) + power;
+      state.totalProduced[resKey] = (state.totalProduced[resKey] || 0) + power;
+      state.totalClicks++;
+
+      // На планете ручное бурение также вырабатывает кинетическую энергию
+      let floatMsg = `+${formatNumber(power)} ${GAME_CONFIG.resources[resKey].name}`;
+      if (state.currentTier === 'planet') {
+        const energyGain = Math.max(1, Math.round(power * 0.5));
+        state.resources.energy = (state.resources.energy || 0) + energyGain;
+        state.totalProduced.energy = (state.totalProduced.energy || 0) + energyGain;
+        floatMsg = `+${formatNumber(power)} 🪨  +${formatNumber(energyGain)} ⚡`;
+      }
+
+      // Звук
+      playSound('click');
+
+      // Создание всплывающего числа
+      spawnFloatingText(floatMsg, e.clientX, e.clientY);
+
+      // Взрыв частиц на Canvas
+      spawnClickParticles(e.clientX, e.clientY);
+
+      // Анимация пульса
+      const target = document.getElementById('clickTargetCircle');
+      target.style.transform = 'scale(0.92)';
+      setTimeout(() => target.style.transform = 'scale(1)', 100);
+
+      updateUI();
+    }
+
+    function spawnFloatingText(text, x, y) {
+      const el = document.createElement('div');
+      el.className = 'floating-text';
+      el.textContent = text;
+      // Небольшой случайный разброс
+      const offsetX = (Math.random() - 0.5) * 40;
+      el.style.left = `${x + offsetX}px`;
+      el.style.top = `${y - 20}px`;
+      document.body.appendChild(el);
+
+      setTimeout(() => {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      }, 1000);
+    }
+
+    /* =========================================================================
+       6. ПОКУПКА ЗДАНИЙ И ТЕХНОЛОГИЙ
+       ========================================================================= */
+    function buyBuilding(bId) {
+      const building = GAME_CONFIG.buildings.find(b => b.id === bId);
+      if (!building) return;
+
+      const cost = getBuildingCost(building);
+      if (!canAfford(cost)) return;
+
+      deductCost(cost);
+      state.buildings[bId] = (state.buildings[bId] || 0) + 1;
+      state.totalBuildingsBought++;
+
+      playSound('buy');
+      logMessage(`Построено: ${building.name} (Всего: ${state.buildings[bId]})`);
+      updateUI();
+    }
+
+    function buyUpgrade(upgId) {
+      const upg = GAME_CONFIG.upgrades.find(u => u.id === upgId);
+      if (!upg || state.upgradesPurchased.includes(upgId)) return;
+
+      if (!canAfford(upg.cost)) return;
+
+      deductCost(upg.cost);
+      state.upgradesPurchased.push(upgId);
+
+      playSound('buy');
+      logMessage(`Исследована технология: ${upg.name}`);
+      updateUI();
+    }
+
+    function buyConstant(constId) {
+      const c = GAME_CONFIG.constants.find(item => item.id === constId);
+      if (!c) return;
+
+      const currentLvl = state.constants[constId] || 0;
+      const cost = Math.ceil(c.baseCost * Math.pow(c.costMult, currentLvl));
+
+      if ((state.resources.genesisSparks || 0) < cost) return;
+
+      state.resources.genesisSparks -= cost;
+      state.constants[constId] = currentLvl + 1;
+
+      playSound('buy');
+      logMessage(`Улучшена Великая Константа: ${c.name} до ур. ${currentLvl + 1}!`);
+      updateUI();
+    }
+
+    /* =========================================================================
+       7. МАСШТАБЫ И ПРЕСТИЖ (TIERS & COSMOGENESIS)
+       ========================================================================= */
+    function switchTier(tierId) {
+      if (!state.unlockedTiers[tierId]) return;
+
+      state.currentTier = tierId;
+      playSound('warp');
+
+      // Обновление вкладок
+      document.querySelectorAll('.tier-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById(`tabTier${tierId === 'planet' ? 1 : tierId === 'system' ? 2 : tierId === 'galaxy' ? 3 : 4}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const conf = GAME_CONFIG.tiers[tierId];
+      document.getElementById('celestialName').textContent = conf.fullName;
+      document.getElementById('celestialSubtitle').textContent = conf.subtitle;
+      document.getElementById('celestialEmoji').textContent = conf.emoji;
+      document.getElementById('currentScaleLabel').textContent = conf.name + ' уровень';
+
+      const resKey = conf.clickResource;
+      document.getElementById('clickPromptText').textContent = `Клик для сбора (+${formatNumber(getClickPower())} ${GAME_CONFIG.resources[resKey].name})`;
+
+      // Изменение ауры сферы
+      document.getElementById('clickTargetCircle').style.boxShadow = `0 0 60px ${conf.color}55, inset 0 0 40px rgba(255, 255, 255, 0.2)`;
+
+      logMessage(`Переход на масштаб: ${conf.name}`);
+      renderBuildings();
+      renderUpgrades();
+      updateUI();
+    }
+
+    function checkTierUnlocks() {
+      // Проверка перехода Планета -> Система
+      if (!state.unlockedTiers.system) {
+        const cost = GAME_CONFIG.tiers.planet.nextTierCost;
+        if (canAfford(cost)) {
+          state.unlockedTiers.system = true;
+          document.getElementById('tabTier2').disabled = false;
+          document.getElementById('badgeTier2').textContent = 'ГОТОВО';
+          document.getElementById('badgeTier2').style.background = 'var(--accent-green)';
+          showAchievementToast('☀️ Солнечная экспансия открыта!', '🚀');
+          logMessage('Колонизация Солнечной системы теперь доступна во вкладке масштабов!');
+        }
+      }
+
+      // Проверка перехода Система -> Галактика
+      if (!state.unlockedTiers.galaxy && state.unlockedTiers.system) {
+        const cost = GAME_CONFIG.tiers.system.nextTierCost;
+        if (canAfford(cost)) {
+          state.unlockedTiers.galaxy = true;
+          document.getElementById('tabTier3').disabled = false;
+          document.getElementById('badgeTier3').textContent = 'ГОТОВО';
+          document.getElementById('badgeTier3').style.background = 'var(--accent-green)';
+          showAchievementToast('🌀 Галактический варп открыт!', '🌌');
+          logMessage('Сверхсветовые врата открыты! Галактический масштаб разблокирован.');
+        }
+      }
+
+      // Проверка перехода Галактика -> Вселенная
+      if (!state.unlockedTiers.universe && state.unlockedTiers.galaxy) {
+        const cost = GAME_CONFIG.tiers.galaxy.nextTierCost;
+        if (canAfford(cost)) {
+          state.unlockedTiers.universe = true;
+          document.getElementById('tabTier4').disabled = false;
+          document.getElementById('badgeTier4').textContent = 'ГОТОВО';
+          document.getElementById('badgeTier4').style.background = 'var(--accent-green)';
+          showAchievementToast('✨ Мультивселенский горизонт достигнут!', '💥');
+          logMessage('Квантовый коллапс доступен! Вы можете управлять масштабом Вселенной.');
+        }
+      }
+    }
+
+    function calculatePendingSparks() {
+      // Формула искр: кубический корень из всей произведенной материи
+      const totalMatter = (state.totalProduced.minerals || 0) + 
+                          ((state.totalProduced.plasma || 0) * 10) + 
+                          ((state.totalProduced.darkMatter || 0) * 100) + 
+                          ((state.totalProduced.entropy || 0) * 500);
+
+      if (totalMatter < 100000) return 0;
+      return Math.floor(Math.pow(totalMatter / 100000, 0.4));
+    }
+
+    function triggerBigBang() {
+      const sparks = calculatePendingSparks();
+      if (sparks <= 0) return;
+
+      if (!confirm(`Вы действительно хотите спровоцировать Большой Взрыв?
+Все планетарные, звездные и галактические постройки сбросятся.
+Вы получите: +${sparks} Искр Творения для покупки постоянных констант Вселенной!`)) {
+        return;
+      }
+
+      state.resources.genesisSparks = (state.resources.genesisSparks || 0) + sparks;
+      state.prestigeCount++;
+
+      // Сброс ресурсов и зданий
+      for (const r of Object.keys(GAME_CONFIG.resources)) {
+        if (!GAME_CONFIG.resources[r].isPrestige) {
+          state.resources[r] = 0;
+        }
+      }
+      for (const bId of Object.keys(state.buildings)) {
+        state.buildings[bId] = 0;
+      }
+      state.upgradesPurchased = [];
+      state.buffs = [];
+
+      // Возврат к планете
+      state.currentTier = 'planet';
+      state.unlockedTiers.system = false;
+      state.unlockedTiers.galaxy = false;
+      state.unlockedTiers.universe = false;
+
+      document.getElementById('tabTier2').disabled = true;
+      document.getElementById('badgeTier2').textContent = '🔒';
+      document.getElementById('badgeTier2').style.background = 'rgba(255,255,255,0.1)';
+
+      document.getElementById('tabTier3').disabled = true;
+      document.getElementById('badgeTier3').textContent = '🔒';
+      document.getElementById('badgeTier3').style.background = 'rgba(255,255,255,0.1)';
+
+      document.getElementById('tabTier4').disabled = true;
+      document.getElementById('badgeTier4').textContent = '🔒';
+      document.getElementById('badgeTier4').style.background = 'rgba(255,255,255,0.1)';
+
+      playSound('warp');
+      showAchievementToast(`💥 Большой Взрыв породил ${sparks} Искр!`, '💥');
+      logMessage(`Вселенная переродилась в сингулярности! Начислено ${sparks} Искр Творения.`);
+
+      switchTier('planet');
+      switchRightTab('prestige');
+      updateUI();
+    }
+
+    /* =========================================================================
+       8. СЛУЧАЙНЫЕ СОБЫТИЯ И ИНТЕРАКТИВНЫЕ КОМЕТЫ
+       ========================================================================= */
+    const RANDOM_EVENTS = [
+      {
+        id: 'solar_flare',
+        title: 'Корональный выброс массы',
+        category: 'Солнечная аномалия',
+        icon: '☀️',
+        desc: 'Звезда системы выбросила сверхмощный поток ионизированных частиц. Датчики фиксируют перегрузку накопителей.',
+        choices: [
+          {
+            text: '⚡ Поглотить плазму конденсаторами',
+            outcome: '+300% к генерации Энергии на 30 сек.',
+            action: () => addBuff('energy', 4, 30, 'Перегрузка накопителей (+300% Энергия)')
+          },
+          {
+            text: '🛡️ Сфокусировать магнитные щиты',
+            outcome: 'Синтез редкого изотопа: +500 Плазмы мгновенно',
+            action: () => { state.resources.plasma = (state.resources.plasma || 0) + 500; }
+          }
+        ]
+      },
+      {
+        id: 'alien_probe',
+        title: 'Внеземной артефакт',
+        category: 'Аномалия дальнего космоса',
+        icon: '🛸',
+        desc: 'Автономный разведывательный зонд древней расы дрейфует на границе пояса Койпера. В его памяти хранятся зашифрованные архивы.',
+        choices: [
+          {
+            text: '🔬 Расшифровать квантовые архивы',
+            outcome: 'Открывает случайную бесплатную технологию',
+            action: () => unlockRandomFreeUpgrade()
+          },
+          {
+            text: '⚙️ Разобрать артефакт на сырье',
+            outcome: 'Мгновенный бонус минералов и биомассы',
+            action: () => {
+              const gain = Math.max(200, (state.rates.minerals || 50) * 30);
+              state.resources.minerals = (state.resources.minerals || 0) + gain;
+              logMessage(`Разобран зонд: получено +${formatNumber(gain)} Минералов`);
+            }
+          }
+        ]
+      },
+      {
+        id: 'gravity_anomaly',
+        title: 'Гравитационный резонанс',
+        category: 'Искривление пространства',
+        icon: '🌀',
+        desc: 'Прохождение микроскопической первичной черной дыры вызвало временной сдвиг поля Хиггса.',
+        choices: [
+          {
+            text: '⏳ Синхронизироваться с временной волной',
+            outcome: 'Ускорение всей Вселенной в 3 раза на 20 сек.',
+            action: () => addBuff('all', 3, 20, 'Временное искривление (3x ко всем ресурсам)')
+          },
+          {
+            text: '💎 Извлечь гравитоны из горизонта',
+            outcome: 'Получение чистых Гравитонов и Темной материи',
+            action: () => {
+              state.resources.darkMatter = (state.resources.darkMatter || 0) + 200;
+              state.resources.gravitons = (state.resources.gravitons || 0) + 50;
+            }
+          }
+        ]
+      },
+      {
+        id: 'click_storm',
+        title: 'Квантовый резонанс бурения',
+        category: 'Планетарный феномен',
+        icon: '⚡',
+        desc: 'Колебания планетарного ядра вошли в гармонию с ручными бурами. Каждый клик высвобождает лавину материи!',
+        choices: [
+          {
+            text: '⛏️ Активировать сверхинтенсивное бурение',
+            outcome: 'Сила клика увеличивается в 5 раз на 25 секунд!',
+            action: () => addBuff('click', 5, 25, 'Квантовый шквал (+400% к клику)')
+          }
+        ]
+      }
+    ];
+
+    function addBuff(type, mult, durationSeconds, name) {
+      state.buffs.push({
+        id: 'buff_' + Date.now(),
+        type: type,
+        mult: mult,
+        name: name,
+        endsAt: Date.now() + (durationSeconds * 1000)
+      });
+      renderBuffs();
+    }
+
+    function unlockRandomFreeUpgrade() {
+      const available = GAME_CONFIG.upgrades.filter(u => !state.upgradesPurchased.includes(u.id));
+      if (available.length > 0) {
+        const chosen = available[Math.floor(Math.random() * available.length)];
+        state.upgradesPurchased.push(chosen.id);
+        logMessage(`Артефакт подарил технологию: ${chosen.name}!`);
+        showAchievementToast(`Открыта технология: ${chosen.name}`, '🔬');
+      } else {
+        state.resources.minerals = (state.resources.minerals || 0) + 5000;
+        logMessage('Все технологии уже изучены! Получена компенсация минералов.');
+      }
+    }
+
+    function triggerRandomEvent() {
+      // Не спавнить, если уже открыто модальное окно
+      if (document.getElementById('eventModal').style.display === 'flex') return;
+
+      const evt = RANDOM_EVENTS[Math.floor(Math.random() * RANDOM_EVENTS.length)];
+      playSound('event');
+
+      document.getElementById('eventIcon').textContent = evt.icon;
+      document.getElementById('eventTitle').textContent = evt.title;
+      document.getElementById('eventCategory').textContent = evt.category;
+      document.getElementById('eventDescription').textContent = evt.desc;
+
+      const choicesBox = document.getElementById('eventChoices');
+      choicesBox.innerHTML = '';
+
+      evt.choices.forEach(c => {
+        const btn = document.createElement('button');
+        btn.className = 'event-choice-btn';
+        btn.innerHTML = `
+          <div>
+            <strong>${c.text}</strong>
+            <div class="choice-outcome">${c.outcome}</div>
+          </div>
+          <span>➔</span>
+        `;
+        btn.onclick = () => {
+          c.action();
+          closeEventModal();
+          updateUI();
+        };
+        choicesBox.appendChild(btn);
+      });
+
+      document.getElementById('eventModal').style.display = 'flex';
+      logMessage(`Событие: ${evt.title}!`);
+    }
+
+    function closeEventModal() {
+      document.getElementById('eventModal').style.display = 'none';
+    }
+
+    /* =========================================================================
+       9. АНИМАЦИЯ КОСМОСА НА CANVAS (Звезды, Планета, Галактика, Кометы)
+       ========================================================================= */
+    const canvas = document.getElementById('spaceCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let stars = [];
+    let particles = [];
+    let comets = [];
+    let canvasWidth = 0;
+    let canvasHeight = 0;
+    let animAngle = 0;
+
+    function resizeCanvas() {
+      canvasWidth = canvas.parentElement.clientWidth;
+      canvasHeight = canvas.parentElement.clientHeight;
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+      initStars();
+    }
+
+    function initStars() {
+      stars = [];
+      const starCount = Math.floor((canvasWidth * canvasHeight) / 3500);
+      for (let i = 0; i < starCount; i++) {
+        stars.push({
+          x: Math.random() * canvasWidth,
+          y: Math.random() * canvasHeight,
+          radius: Math.random() * 1.5 + 0.5,
+          alpha: Math.random() * 0.8 + 0.2,
+          speed: Math.random() * 0.3 + 0.1,
+          twinkleSpeed: Math.random() * 0.02 + 0.005
+        });
+      }
+    }
+
+    function spawnClickParticles(x, y) {
+      const rect = canvas.getBoundingClientRect();
+      const clickX = x - rect.left;
+      const clickY = y - rect.top;
+      const curConf = GAME_CONFIG.tiers[state.currentTier];
+
+      for (let i = 0; i < 16; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 4 + 1.5;
+        particles.push({
+          x: clickX,
+          y: clickY,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          radius: Math.random() * 3 + 1.5,
+          color: curConf.color,
+          alpha: 1,
+          life: 1
+        });
+      }
+    }
+
+    function spawnComet() {
+      const startFromLeft = Math.random() > 0.5;
+      const startX = startFromLeft ? -50 : canvasWidth + 50;
+      const startY = Math.random() * (canvasHeight * 0.7);
+      const targetX = startFromLeft ? canvasWidth + 100 : -100;
+      const targetY = startY + (Math.random() - 0.5) * 300;
+
+      const angle = Math.atan2(targetY - startY, targetX - startX);
+      const speed = Math.random() * 3 + 3.5;
+
+      comets.push({
+        x: startX,
+        y: startY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        radius: 14,
+        tail: [],
+        alive: true
+      });
+    }
+
+    // Клик по комете прямо на Canvas
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      for (let i = comets.length - 1; i >= 0; i--) {
+        const c = comets[i];
+        const dist = Math.hypot(c.x - mouseX, c.y - mouseY);
+        if (dist < c.radius + 20) {
+          // Попадание в комету!
+          c.alive = false;
+          state.cometsClicked++;
+          playSound('comet');
+
+          // Награда
+          const curRes = GAME_CONFIG.tiers[state.currentTier].clickResource;
+          const bounty = Math.max(100, Math.floor((state.rates[curRes] || 50) * 45));
+          state.resources[curRes] = (state.resources[curRes] || 0) + bounty;
+
+          spawnFloatingText(`☄️ ЗОЛОТАЯ КОМЕТА! +${formatNumber(bounty)} ${GAME_CONFIG.resources[curRes].name}`, e.clientX, e.clientY);
+          logMessage(`Перехвачена комета! Получено +${formatNumber(bounty)} ресурсов.`);
+
+          // Эффект взрыва
+          for (let p = 0; p < 30; p++) {
+            const angle = Math.random() * Math.PI * 2;
+            const spd = Math.random() * 6 + 2;
+            particles.push({
+              x: c.x,
+              y: c.y,
+              vx: Math.cos(angle) * spd,
+              vy: Math.sin(angle) * spd,
+              radius: Math.random() * 4 + 2,
+              color: '#ffd000',
+              alpha: 1,
+              life: 1
+            });
+          }
+          break;
+        }
+      }
+    });
+
+    function drawSpaceCanvas() {
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+      // Фон космоса
+      ctx.fillStyle = '#050711';
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+      // Звезды
+      stars.forEach(s => {
+        s.alpha += s.twinkleSpeed;
+        if (s.alpha > 1 || s.alpha < 0.2) s.twinkleSpeed = -s.twinkleSpeed;
+
+        ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0.1, s.alpha)})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Медленное смещение для параллакса
+        s.y -= s.speed * 0.15;
+        if (s.y < 0) s.y = canvasHeight;
+      });
+
+      animAngle += 0.008;
+
+      // Отрисовка фонового космического явления в зависимости от масштаба
+      const cx = canvasWidth / 2;
+      const cy = canvasHeight / 2;
+
+      if (state.currentTier === 'system') {
+        // Орбитальные кольца звездной системы
+        ctx.strokeStyle = 'rgba(255, 170, 0, 0.15)';
+        ctx.lineWidth = 1;
+        for (let r = 160; r <= 320; r += 50) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Маленькие спутники на орбитах
+          const planetX = cx + Math.cos(animAngle * (200 / r)) * r;
+          const planetY = cy + Math.sin(animAngle * (200 / r)) * r;
+          ctx.fillStyle = 'rgba(255, 200, 100, 0.7)';
+          ctx.beginPath();
+          ctx.arc(planetX, planetY, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (state.currentTier === 'galaxy') {
+        // Спиральные рукава галактики
+        const arms = 3;
+        for (let i = 0; i < arms; i++) {
+          const armAngle = animAngle * 0.6 + (i * (Math.PI * 2 / arms));
+          ctx.strokeStyle = 'rgba(179, 75, 255, 0.12)';
+          ctx.lineWidth = 18;
+          ctx.beginPath();
+          for (let dist = 140; dist < 380; dist += 10) {
+            const spiralA = armAngle + (dist * 0.015);
+            const gx = cx + Math.cos(spiralA) * dist;
+            const gy = cy + Math.sin(spiralA) * dist;
+            if (dist === 140) ctx.moveTo(gx, gy);
+            else ctx.lineTo(gx, gy);
+          }
+          ctx.stroke();
+        }
+      } else if (state.currentTier === 'universe') {
+        // Космическая паутина (Cosmic Web)
+        ctx.strokeStyle = 'rgba(0, 255, 170, 0.1)';
+        ctx.lineWidth = 1.5;
+        for (let i = 0; i < 6; i++) {
+          const nodeAngle = animAngle * 0.3 + (i * Math.PI / 3);
+          const nx = cx + Math.cos(nodeAngle) * 260;
+          const ny = cy + Math.sin(nodeAngle) * 260;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(nx, ny);
+          ctx.stroke();
+
+          ctx.fillStyle = 'rgba(0, 240, 255, 0.4)';
+          ctx.beginPath();
+          ctx.arc(nx, ny, 6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Частицы от клика
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.025;
+
+        if (p.life <= 0) {
+          particles.splice(i, 1);
+        } else {
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.life;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      // Летящие кометы
+      for (let i = comets.length - 1; i >= 0; i--) {
+        const c = comets[i];
+        c.x += c.vx;
+        c.y += c.vy;
+
+        // Хвост
+        c.tail.push({ x: c.x, y: c.y, alpha: 1 });
+        if (c.tail.length > 15) c.tail.shift();
+
+        // Отрисовка хвоста
+        for (let t = 0; t < c.tail.length; t++) {
+          const pt = c.tail[t];
+          ctx.fillStyle = `rgba(255, 208, 0, ${t / c.tail.length * 0.5})`;
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, (t / c.tail.length) * c.radius * 0.8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Ядро кометы
+        ctx.fillStyle = '#fff';
+        ctx.shadowColor = '#ffd000';
+        ctx.shadowBlur = 15;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Удаление вышедших за экран
+        if (c.x < -100 || c.x > canvasWidth + 100 || c.y < -100 || c.y > canvasHeight + 100 || !c.alive) {
+          comets.splice(i, 1);
+        }
+      }
+
+      requestAnimationFrame(drawSpaceCanvas);
+    }
+
+    /* =========================================================================
+       10. ОБНОВЛЕНИЕ UI И РЕНДЕРИНГ ЭЛЕМЕНТОВ
+       ========================================================================= */
+    function switchRightTab(tabKey) {
+      document.querySelectorAll('.right-tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tabContentBuildings').style.display = 'none';
+      document.getElementById('tabContentUpgrades').style.display = 'none';
+      document.getElementById('tabContentPrestige').style.display = 'none';
+
+      if (tabKey === 'buildings') {
+        document.getElementById('tabBtnBuildings').classList.add('active');
+        document.getElementById('tabContentBuildings').style.display = 'flex';
+      } else if (tabKey === 'upgrades') {
+        document.getElementById('tabBtnUpgrades').classList.add('active');
+        document.getElementById('tabContentUpgrades').style.display = 'flex';
+      } else if (tabKey === 'prestige') {
+        document.getElementById('tabBtnPrestige').classList.add('active');
+        document.getElementById('tabContentPrestige').style.display = 'flex';
+      }
+    }
+
+    /* =========================================================================
+       10. ОБНОВЛЕНИЕ UI И РЕНДЕРИНГ ЭЛЕМЕНТОВ (БЕЗ УДАЛЕНИЯ DOM КАЖДЫЙ КАДР)
+       ========================================================================= */
+    function switchRightTab(tabKey) {
+      document.querySelectorAll('.right-tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tabContentBuildings').style.display = 'none';
+      document.getElementById('tabContentUpgrades').style.display = 'none';
+      document.getElementById('tabContentPrestige').style.display = 'none';
+
+      if (tabKey === 'buildings') {
+        document.getElementById('tabBtnBuildings').classList.add('active');
+        document.getElementById('tabContentBuildings').style.display = 'flex';
+      } else if (tabKey === 'upgrades') {
+        document.getElementById('tabBtnUpgrades').classList.add('active');
+        document.getElementById('tabContentUpgrades').style.display = 'flex';
+      } else if (tabKey === 'prestige') {
+        document.getElementById('tabBtnPrestige').classList.add('active');
+        document.getElementById('tabContentPrestige').style.display = 'flex';
+      }
+    }
+
+    let builtResourcesTier = null;
+    function renderResources() {
+      const container = document.getElementById('resourceListContainer');
+      const tierOrder = ['planet', 'system', 'galaxy', 'universe'];
+      const maxTierIndex = tierOrder.indexOf(state.currentTier);
+
+      // Проверяем, нужно ли пересоздать карточки ресурсов (при смене масштаба или разблокировке)
+      const currentTierKey = state.currentTier + '_' + Object.values(state.unlockedTiers).join('_');
+      if (builtResourcesTier !== currentTierKey) {
+        container.innerHTML = '';
+        tierOrder.forEach((tId, idx) => {
+          if (idx <= maxTierIndex || state.unlockedTiers[tId]) {
+            for (const [resKey, conf] of Object.entries(GAME_CONFIG.resources)) {
+              if (conf.tier === tId && !conf.isPrestige) {
+                const card = document.createElement('div');
+                card.className = 'resource-card';
+                card.id = 'res_card_' + resKey;
+                card.style.setProperty('--res-color', conf.color);
+                card.innerHTML = `
+                  <div class="res-icon">${conf.icon}</div>
+                  <div class="res-info">
+                    <div class="res-name">${conf.name}</div>
+                    <div class="res-amount" id="res_amt_${resKey}">0</div>
+                    <div class="res-rate" id="res_rate_${resKey}">+0 / сек</div>
+                  </div>
+                `;
+                container.appendChild(card);
+              }
+            }
+          }
+        });
+        builtResourcesTier = currentTierKey;
+      }
+
+      // Обновляем только текстовые значения без пересоздания DOM
+      tierOrder.forEach((tId, idx) => {
+        if (idx <= maxTierIndex || state.unlockedTiers[tId]) {
+          for (const [resKey, conf] of Object.entries(GAME_CONFIG.resources)) {
+            if (conf.tier === tId && !conf.isPrestige) {
+              const amtEl = document.getElementById('res_amt_' + resKey);
+              const rateEl = document.getElementById('res_rate_' + resKey);
+              if (amtEl && rateEl) {
+                const amount = state.resources[resKey] || 0;
+                const rate = state.rates[resKey] || 0;
+                amtEl.textContent = formatNumber(amount);
+                rateEl.textContent = `${rate >= 0 ? '+' : ''}${formatNumber(rate)} / сек`;
+                rateEl.style.color = rate >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+              }
+            }
+          }
+        }
+      });
+    }
+
+    let builtBuildingsTier = null;
+    function renderBuildings() {
+      const container = document.getElementById('tabContentBuildings');
+
+      // Пересоздаем DOM только если сменился текущий масштаб
+      if (builtBuildingsTier !== state.currentTier) {
+        container.innerHTML = '';
+        const buildingsForTier = GAME_CONFIG.buildings.filter(b => b.tier === state.currentTier);
+
+        buildingsForTier.forEach(b => {
+          const card = document.createElement('div');
+          card.className = 'building-card';
+          card.id = 'bld_card_' + b.id;
+          card.dataset.buildingId = b.id;
+
+          // Используем и click, и pointerdown для мгновенного отклика
+          card.addEventListener('click', (e) => {
+            e.stopPropagation();
+            buyBuilding(b.id);
+          });
+
+          let costHtml = '';
+          for (const [res, amt] of Object.entries(b.baseCost)) {
+            const resConf = GAME_CONFIG.resources[res];
+            costHtml += `
+              <div class="cost-pill" id="bld_cost_${b.id}_${res}">
+                <span>${resConf.icon}</span>
+                <span class="cost-val">${formatNumber(amt)}</span>
+              </div>
+            `;
+          }
+
+          let prodHtml = '';
+          for (const [res, prod] of Object.entries(b.production)) {
+            prodHtml += `+${formatNumber(prod)} ${GAME_CONFIG.resources[res].name}/сек `;
+          }
+
+          card.innerHTML = `
+            <div class="building-header">
+              <div class="b-name-wrap">
+                <span class="b-icon">${b.icon}</span>
+                <span class="b-name">${b.name}</span>
+              </div>
+              <div class="b-count" id="bld_cnt_${b.id}">0</div>
+            </div>
+            <div class="b-desc">${b.desc}</div>
+            <div class="b-production">${prodHtml}</div>
+            <div class="b-cost">${costHtml}</div>
+          `;
+          container.appendChild(card);
+        });
+
+        // Карточка перехода на следующий масштаб
+        const curConf = GAME_CONFIG.tiers[state.currentTier];
+        if (curConf.nextTierCost) {
+          const nextBox = document.createElement('div');
+          nextBox.className = 'prestige-box';
+          nextBox.id = 'nextTierBox';
+          nextBox.style.marginTop = '16px';
+          nextBox.style.background = 'linear-gradient(135deg, rgba(0, 240, 255, 0.1), rgba(179, 75, 255, 0.1))';
+
+          let costHtml = '';
+          for (const [res, amt] of Object.entries(curConf.nextTierCost)) {
+            const resConf = GAME_CONFIG.resources[res];
+            costHtml += `
+              <span class="cost-pill" id="next_tier_cost_${res}">
+                ${resConf.icon} ${formatNumber(amt)} ${resConf.name}
+              </span>
+            `;
+          }
+
+          nextBox.innerHTML = `
+            <h4 style="color: #fff; font-size: 0.95rem;">🚀 ${curConf.nextTierDesc}</h4>
+            <p style="font-size: 0.75rem; color: var(--text-dim);">Совершите прорыв цивилизации в следующий масштаб космоса!</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;" id="nextTierCostContainer">${costHtml}</div>
+          `;
+          container.appendChild(nextBox);
+        }
+
+        builtBuildingsTier = state.currentTier;
+      }
+
+      // Обновляем свойства карточек зданий без пересоздания DOM!
+      const buildingsForTier = GAME_CONFIG.buildings.filter(b => b.tier === state.currentTier);
+      buildingsForTier.forEach(b => {
+        const card = document.getElementById('bld_card_' + b.id);
+        if (!card) return;
+
+        const owned = state.buildings[b.id] || 0;
+        const cost = getBuildingCost(b);
+        const affordable = canAfford(cost);
+
+        card.classList.toggle('disabled', !affordable);
+
+        const countEl = document.getElementById('bld_cnt_' + b.id);
+        if (countEl) countEl.textContent = owned;
+
+        for (const [res, amt] of Object.entries(cost)) {
+          const pill = document.getElementById(`bld_cost_${b.id}_${res}`);
+          if (pill) {
+            const hasEnough = (state.resources[res] || 0) >= amt;
+            pill.classList.toggle('unaffordable', !hasEnough);
+            const valSpan = pill.querySelector('.cost-val');
+            if (valSpan) valSpan.textContent = formatNumber(amt);
+          }
+        }
+      });
+
+      // Обновление карточки следующего уровня
+      const curConf = GAME_CONFIG.tiers[state.currentTier];
+      if (curConf.nextTierCost) {
+        for (const [res, amt] of Object.entries(curConf.nextTierCost)) {
+          const pill = document.getElementById('next_tier_cost_' + res);
+          if (pill) {
+            const hasEnough = (state.resources[res] || 0) >= amt;
+            pill.classList.toggle('unaffordable', !hasEnough);
+          }
+        }
+      }
+    }
+
+    let builtUpgradesCount = -1;
+    function renderUpgrades() {
+      const container = document.getElementById('upgradeGrid');
+      const availUpgrades = GAME_CONFIG.upgrades.filter(u => 
+        !state.upgradesPurchased.includes(u.id) &&
+        (u.tier === state.currentTier || state.unlockedTiers[u.tier])
+      );
+
+      document.getElementById('availUpgradesCount').textContent = availUpgrades.length;
+
+      // Если изменился состав доступных технологий
+      const upgSignature = availUpgrades.map(u => u.id).join(',');
+      if (container.dataset.signature !== upgSignature) {
+        container.dataset.signature = upgSignature;
+        container.innerHTML = '';
+
+        if (availUpgrades.length === 0) {
+          container.innerHTML = '<div style="font-size: 0.8rem; color: var(--text-dim); text-align: center; padding: 20px;">Все доступные технологии изучены!</div>';
+          return;
+        }
+
+        availUpgrades.forEach(u => {
+          const card = document.createElement('div');
+          card.className = 'upgrade-card';
+          card.id = 'upg_card_' + u.id;
+          card.addEventListener('click', (e) => {
+            e.stopPropagation();
+            buyUpgrade(u.id);
+          });
+
+          let costHtml = '';
+          for (const [res, amt] of Object.entries(u.cost)) {
+            const resConf = GAME_CONFIG.resources[res];
+            costHtml += `
+              <span class="cost-pill" id="upg_cost_${u.id}_${res}">
+                ${resConf.icon} ${formatNumber(amt)}
+              </span>
+            `;
+          }
+
+          card.innerHTML = `
+            <div class="upgrade-title">
+              <span>🔬</span>
+              <span>${u.name}</span>
+            </div>
+            <div class="upgrade-desc">${u.desc}</div>
+            <div style="display: flex; gap: 6px; margin-top: 6px;">${costHtml}</div>
+          `;
+          container.appendChild(card);
+        });
+      }
+
+      // Обновляем доступность без пересоздания DOM
+      availUpgrades.forEach(u => {
+        const card = document.getElementById('upg_card_' + u.id);
+        if (!card) return;
+
+        const affordable = canAfford(u.cost);
+        card.classList.toggle('disabled', !affordable);
+
+        for (const [res, amt] of Object.entries(u.cost)) {
+          const pill = document.getElementById(`upg_cost_${u.id}_${res}`);
+          if (pill) {
+            const hasEnough = (state.resources[res] || 0) >= amt;
+            pill.classList.toggle('unaffordable', !hasEnough);
+          }
+        }
+      });
+    }
+
+    let constantsDOMBuilt = false;
+    function renderPrestigeTab() {
+      const sparks = calculatePendingSparks();
+      document.getElementById('pendingSparksText').textContent = `+${sparks} Искр Творения`;
+      document.getElementById('genesisSparksCount').textContent = formatNumber(state.resources.genesisSparks || 0);
+
+      const btn = document.getElementById('bigBangBtn');
+      btn.disabled = sparks <= 0;
+
+      const constList = document.getElementById('constantsList');
+
+      if (!constantsDOMBuilt) {
+        constList.innerHTML = '';
+        GAME_CONFIG.constants.forEach(c => {
+          const row = document.createElement('div');
+          row.className = 'resource-card constant-card';
+          row.id = 'const_card_' + c.id;
+          row.addEventListener('click', () => {
+            buyConstant(c.id);
+          });
+
+          row.innerHTML = `
+            <div class="res-info">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <strong style="color: #fff; font-size: 0.85rem;">${c.name}</strong>
+                <span class="cost-pill" id="const_lvl_${c.id}" style="color: var(--accent-gold); font-weight: 700;">Ур. 0</span>
+              </div>
+              <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 3px;">${c.desc}</div>
+              <div style="margin-top: 6px; font-size: 0.75rem; color: var(--accent-cyan);">
+                Стоимость: <strong id="const_cost_${c.id}">0 💥 Искр</strong>
+              </div>
+            </div>
+          `;
+          constList.appendChild(row);
+        });
+        constantsDOMBuilt = true;
+      }
+
+      // Обновляем константы
+      GAME_CONFIG.constants.forEach(c => {
+        const currentLvl = state.constants[c.id] || 0;
+        const cost = Math.ceil(c.baseCost * Math.pow(c.costMult, currentLvl));
+        const canBuy = (state.resources.genesisSparks || 0) >= cost;
+
+        const row = document.getElementById('const_card_' + c.id);
+        if (row) {
+          row.style.cursor = canBuy ? 'pointer' : 'default';
+          row.style.opacity = canBuy ? '1' : '0.6';
+        }
+        const lvlEl = document.getElementById('const_lvl_' + c.id);
+        if (lvlEl) lvlEl.textContent = 'Ур. ' + currentLvl;
+
+        const costEl = document.getElementById('const_cost_' + c.id);
+        if (costEl) costEl.textContent = `${cost} 💥 Искр`;
+      });
+    }
+
+    let lastBuffSignature = '';
+    function renderBuffs() {
+      const container = document.getElementById('buffsContainer');
+      const now = Date.now();
+      const active = state.buffs.filter(b => b.endsAt > now);
+
+      const buffSig = active.map(b => b.id).join(',');
+      if (buffSig !== lastBuffSignature) {
+        lastBuffSignature = buffSig;
+        container.innerHTML = '';
+        if (active.length === 0) {
+          container.innerHTML = '<div style="font-size: 0.75rem; color: var(--text-dim); text-align: center; padding: 6px;">Аномалий не обнаружено</div>';
+          return;
+        }
+
+        active.forEach(b => {
+          const badge = document.createElement('div');
+          badge.className = 'buff-badge';
+          badge.id = 'buff_el_' + b.id;
+          badge.innerHTML = `
+            <span class="buff-text">⚡ ${b.name}</span>
+            <span class="buff-timer" id="buff_timer_${b.id}">0s</span>
+          `;
+          container.appendChild(badge);
+        });
+      }
+
+      // Обновляем таймеры
+      active.forEach(b => {
+        const timerEl = document.getElementById('buff_timer_' + b.id);
+        if (timerEl) {
+          const remSec = Math.max(0, Math.ceil((b.endsAt - now) / 1000));
+          timerEl.textContent = remSec + 's';
+        }
+      });
+    }
+
+    function updateUI() {
+      renderResources();
+      renderBuildings();
+      renderUpgrades();
+      renderPrestigeTab();
+      renderBuffs();
+      checkTierUnlocks();
+
+      const clickPower = getClickPower();
+      const promptEl = document.getElementById('clickPromptText');
+      if (promptEl) {
+        if (state.currentTier === 'planet') {
+          const energyGain = Math.max(1, Math.round(clickPower * 0.5));
+          promptEl.textContent = `Клик для бурения (+${formatNumber(clickPower)} 🪨, +${formatNumber(energyGain)} ⚡)`;
+        } else {
+          const curConf = GAME_CONFIG.tiers[state.currentTier];
+          const resKey = curConf.clickResource;
+          promptEl.textContent = `Клик для сбора (+${formatNumber(clickPower)} ${GAME_CONFIG.resources[resKey].name})`;
+        }
+      }
+
+      document.getElementById('totalClicksCount').textContent = formatNumber(state.totalClicks);
+      document.getElementById('gameTimeCounter').textContent = formatTime(state.playTimeSeconds);
+    }
+
+    function logMessage(text) {
+      document.getElementById('statusTicker').textContent = text;
+    }
+
+    /* =========================================================================
+       11. ДОСТИЖЕНИЯ
+       ========================================================================= */
+    function checkAchievements() {
+      GAME_CONFIG.achievements.forEach(ach => {
+        if (!ach.unlocked && ach.check(state)) {
+          ach.unlocked = true;
+          showAchievementToast(ach.title, ach.icon);
+          playSound('event');
+          logMessage(`🏆 Достижение разблокировано: ${ach.title}!`);
+        }
+      });
+    }
+
+    function showAchievementToast(title, icon) {
+      const toast = document.getElementById('achievementToast');
+      document.getElementById('achToastTitle').textContent = title;
+      document.getElementById('achToastIcon').textContent = icon || '🏆';
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
+    function openStatsModal() {
+      const list = document.getElementById('achievementsList');
+      list.innerHTML = '';
+
+      let unlockedCount = 0;
+      GAME_CONFIG.achievements.forEach(ach => {
+        if (ach.unlocked) unlockedCount++;
+
+        const item = document.createElement('div');
+        item.className = 'resource-card';
+        item.style.opacity = ach.unlocked ? '1' : '0.4';
+        item.innerHTML = `
+          <div style="font-size: 1.6rem;">${ach.icon}</div>
+          <div class="res-info">
+            <div style="font-weight: 700; color: ${ach.unlocked ? '#fff' : 'var(--text-dim)'};">${ach.title}</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">${ach.desc}</div>
+          </div>
+          <div>${ach.unlocked ? '✅' : '🔒'}</div>
+        `;
+        list.appendChild(item);
+      });
+
+      document.getElementById('unlockedAchCount').textContent = unlockedCount;
+      document.getElementById('totalAchCount').textContent = GAME_CONFIG.achievements.length;
+
+      document.getElementById('statsSummary').innerHTML = `
+        <div>⏳ Проведено в игре: <strong>${formatTime(state.playTimeSeconds)}</strong></div>
+        <div>👆 Всего кликов совершено: <strong>${formatNumber(state.totalClicks)}</strong></div>
+        <div>☄️ Поймано золотых комет: <strong>${state.cometsClicked}</strong></div>
+        <div>💥 Количество Больших Взрывов (Престиж): <strong>${state.prestigeCount}</strong></div>
+        <div>🏗️ Всего куплено построек: <strong>${state.totalBuildingsBought}</strong></div>
+      `;
+
+      document.getElementById('statsModal').style.display = 'flex';
+    }
+
+    function closeStatsModal() {
+      document.getElementById('statsModal').style.display = 'none';
+    }
+
+    function openSettingsModal() {
+      document.getElementById('settingsModal').style.display = 'flex';
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').style.display = 'none';
+    }
+
+    /* =========================================================================
+       ПЕСОЧНИЦА / РЕЖИМ ТВОРЦА (CHEAT / TEST FUNCTIONS)
+       ========================================================================= */
+    function openCheatModal() {
+      document.getElementById('cheatModal').style.display = 'flex';
+    }
+
+    function closeCheatModal() {
+      document.getElementById('cheatModal').style.display = 'none';
+    }
+
+    function cheatGiveResources(amount) {
+      for (const r of Object.keys(GAME_CONFIG.resources)) {
+        if (!GAME_CONFIG.resources[r].isPrestige) {
+          state.resources[r] = (state.resources[r] || 0) + amount;
+          state.totalProduced[r] = (state.totalProduced[r] || 0) + amount;
+        }
+      }
+      logMessage(`Режим Творца: начислено +${formatNumber(amount)} всех ресурсов!`);
+      playSound('buy');
+      updateUI();
+    }
+
+    function cheatGiveSparks(amount) {
+      state.resources.genesisSparks = (state.resources.genesisSparks || 0) + amount;
+      logMessage(`Режим Творца: начислено +${formatNumber(amount)} Искр Творения!`);
+      playSound('warp');
+      updateUI();
+    }
+
+    function cheatUnlockAllTiers() {
+      state.unlockedTiers.system = true;
+      state.unlockedTiers.galaxy = true;
+      state.unlockedTiers.universe = true;
+
+      document.getElementById('tabTier2').disabled = false;
+      document.getElementById('badgeTier2').textContent = 'ОТКРЫТО';
+      document.getElementById('badgeTier2').style.background = 'var(--accent-green)';
+
+      document.getElementById('tabTier3').disabled = false;
+      document.getElementById('badgeTier3').textContent = 'ОТКРЫТО';
+      document.getElementById('badgeTier3').style.background = 'var(--accent-green)';
+
+      document.getElementById('tabTier4').disabled = false;
+      document.getElementById('badgeTier4').textContent = 'ОТКРЫТО';
+      document.getElementById('badgeTier4').style.background = 'var(--accent-green)';
+
+      builtResourcesTier = null; // force rebuild resource cards to show all
+      logMessage('Режим Творца: все 4 масштаба Вселенной открыты!');
+      playSound('warp');
+      updateUI();
+    }
+
+    function cheatGodMode() {
+      cheatGiveResources(1000000000);
+      cheatGiveSparks(50000);
+      cheatUnlockAllTiers();
+
+      // Автоматически изучаем все технологии
+      GAME_CONFIG.upgrades.forEach(u => {
+        if (!state.upgradesPurchased.includes(u.id)) {
+          state.upgradesPurchased.push(u.id);
+        }
+      });
+
+      showAchievementToast('👑 Режим Творца активирован!', '🌌');
+      closeCheatModal();
+      updateUI();
+    }
+
+    /* =========================================================================
+       12. СОХРАНЕНИЕ / ЗАГРУЗКА / ОФФЛАЙН ПРОГРЕСС
+       ========================================================================= */
+    const SAVE_KEY = 'cosmosis_incremental_save_v1';
+
+    function saveGame() {
+      state.lastSaveTime = Date.now();
+      localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    }
+
+    function loadGame() {
+      const dataStr = localStorage.getItem(SAVE_KEY);
+      if (!dataStr) return;
+
+      try {
+        const loaded = JSON.parse(dataStr);
+        // Слияние со стейтом
+        Object.assign(state, loaded);
+
+        // Восстановление ачивок
+        if (loaded.unlockedAchIds) {
+          GAME_CONFIG.achievements.forEach(a => {
+            if (loaded.unlockedAchIds.includes(a.id)) a.unlocked = true;
+          });
+        }
+
+        // Оффлайн прогресс
+        const now = Date.now();
+        const diffSeconds = Math.min(86400 * 3, Math.max(0, (now - (state.lastSaveTime || now)) / 1000));
+        if (diffSeconds > 10) {
+          calculateProductionRates();
+          let offlineMsg = `С возвращением! Во время вашего отсутствия (${formatTime(diffSeconds)}):\n`;
+          for (const [res, rate] of Object.entries(state.rates)) {
+            if (rate > 0) {
+              const gained = rate * diffSeconds * 0.75; // 75% оффлайн эффективность
+              state.resources[res] = (state.resources[res] || 0) + gained;
+              offlineMsg += `+${formatNumber(gained)} ${GAME_CONFIG.resources[res].name}\n`;
+            }
+          }
+          alert(offlineMsg);
+        }
+
+        // Обновление кнопок вкладок
+        if (state.unlockedTiers.system) document.getElementById('tabTier2').disabled = false;
+        if (state.unlockedTiers.galaxy) document.getElementById('tabTier3').disabled = false;
+        if (state.unlockedTiers.universe) document.getElementById('tabTier4').disabled = false;
+
+        switchTier(state.currentTier || 'planet');
+      } catch (err) {
+        console.error('Ошибка загрузки сохранения:', err);
+      }
+    }
+
+    function exportSaveData() {
+      saveGame();
+      const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+      navigator.clipboard.writeText(b64).then(() => {
+        alert('Код сохранения скопирован в буфер обмена!');
+      }).catch(() => {
+        prompt('Скопируйте код сохранения вручную:', b64);
+      });
+    }
+
+    function importSaveData() {
+      const str = prompt('Вставьте код сохранения:');
+      if (!str) return;
+      try {
+        const parsed = JSON.parse(decodeURIComponent(escape(atob(str))));
+        localStorage.setItem(SAVE_KEY, JSON.stringify(parsed));
+        location.reload();
+      } catch (e) {
+        alert('Некорректный код сохранения!');
+      }
+    }
+
+    function hardResetGame() {
+      if (confirm('ВНИМАНИЕ! Это действие сотрет весь ваш прогресс навсегда! Продолжить?')) {
+        localStorage.removeItem(SAVE_KEY);
+        location.reload();
+      }
+    }
+
+    /* =========================================================================
+       13. ГЛАВНЫЙ ИГРОВОЙ ЦИКЛ
+       ========================================================================= */
+    let lastTickTime = performance.now();
+
+    function mainLoop(timestamp) {
+      const delta = (timestamp - lastTickTime) / 1000;
+      lastTickTime = timestamp;
+
+      // Защита от огромных лагов
+      if (delta > 0 && delta < 5) {
+        gameTick(delta);
+      }
+
+      updateUI();
+      requestAnimationFrame(mainLoop);
+    }
+
+    // Инициализация при загрузке
+    window.addEventListener('load', () => {
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      loadGame();
+      updateUI();
+      requestAnimationFrame(mainLoop);
+      drawSpaceCanvas();
+
+      // Автосохранение каждые 5 секунд
+      setInterval(saveGame, 5000);
+
+      // Спавн летящих комет каждые 20-35 секунд
+      setInterval(() => {
+        if (Math.random() < 0.8) spawnComet();
+      }, 25000);
+
+      // Спавн случайных событий каждые 60-90 секунд
+      setInterval(() => {
+        triggerRandomEvent();
+      }, 70000);
+    });
+  </script>
+</body>
+</html>
